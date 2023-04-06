@@ -6,6 +6,8 @@ from sqlalchemy import select
 from flask_login import login_user, logout_user, login_required, current_user
 from werkzeug.security import generate_password_hash, check_password_hash
 from flask_cors import CORS
+import jwt
+import datetime
 
 app=Flask(__name__)
 CORS(app)
@@ -47,7 +49,7 @@ class UserAdd(Resource):
         elif len(username) < 2:
             response_data={'Message':'Username is too short.'}
             return jsonify(response_data)
-        elif len(password1) < 6:
+        elif len(password1) < 8:
             response_data={'Message':'Password is too short.'}
             return jsonify(response_data)
         elif len(email) < 4:
@@ -76,7 +78,8 @@ class UserLogin(Resource):
       user = UserModel.query.filter_by(email=email).first()
       if user:
          if check_password_hash(user.password, password):
-                response={'Message':"Login success !"} 
+                token=jwt.encode({'user':user.name,'exp':datetime.datetime.utcnow()+datetime.timedelta(minutes=30)},app.secret_key)
+                response={'Message':"Login success !",'token':token} 
                 return  jsonify(response)
          else:
                 response={'Message':"Password is incorrect.!"} 
